@@ -41,7 +41,7 @@
     <Folder Include="grabber\templates\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="grabber\templates\index.html" />
+    <Content Include="grabber\templates\add_job.html" />
     <Content Include="requirements.txt" />
     <Content Include="grabber\static\content\bootstrap.css" />
     <Content Include="grabber\static\content\bootstrap.min.css" />
@@ -67,7 +67,7 @@
     <Content Include="grabber\static\scripts\_references.js" />
     <Content Include="grabber\templates\about.html" />
     <Content Include="grabber\templates\contact.html" />
-    <Content Include="grabber\templates\index2.html" />
+    <Content Include="grabber\templates\index.html" />
     <Content Include="grabber\templates\layout.html" />
   </ItemGroup>
   <ItemGroup>

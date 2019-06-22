@@ -1,15 +1,31 @@
-﻿<!DOCTYPE html>
+{% extends "layout.html" %}
 
-<HTML>
-<BODY bgcolor="cyan">
-    <form method="POST" action="">
-        <center>
-            <H1>Enter your details </H1> <br>
-            user_id <input type="text" name="user_id" /> <br>
-            token <input type="text" name="token" /> <br>
-            time_in <input type="text" name="time_in" /> <br>
-            <input type="submit">
-        </center>
-    </form>
-</BODY>
-</HTML>
+{% block content %}
+
+<div class="jumbotron">
+    <h1>Grabber</h1>
+    <p class="lead">Menos Clicks, mas Bloques.</p>
+    <p><a href="http://flask.pocoo.org/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Getting started</h2>
+        <p>
+            Lorem ipsum dolor sit amet consectetur adipiscing elit urna, elementum nullam venenatis pharetra tempor orci ac, magnis ante dis faucibus eu nec aliquam.
+        </p>
+        <p><a class="btn btn-default" href="http://flask.pocoo.org/docs/">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Get more libraries</h2>
+        <p>Lorem ipsum dolor sit amet consectetur adipiscing elit urna, orci ac, magnis ante dis faucibus eu nec aliquam.</p>
+        <p><a class="btn btn-default" href="https://pypi.python.org/pypi">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Microsoft Azure</h2>
+        <p>Lorem ipsum dolor sit amet consectetur adipiscing elit urna, elementum nullam venenatis pharetra temporeu nec aliquam.</p>
+        <p><a class="btn btn-default" href="http://azure.microsoft.com">Learn more &raquo;</a></p>
+    </div>
+</div>
+
+{% endblock %}
