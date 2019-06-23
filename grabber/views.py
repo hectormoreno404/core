@@ -164,6 +164,7 @@ def core():
         print ("Bloques rechazados ", denied)
         print ("Bloques captudados ", captured)
         contador = contador+1
+        time.sleep(0.25)
         print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
 
     return 'termino'
