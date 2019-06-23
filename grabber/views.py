@@ -18,7 +18,7 @@ from ast import literal_eval
 #****************************GLOBALES****************************************************
 
 token = 'Atna|EwICIMiAP94Qse2fDllqYHpzcnMzLPxfMlIIe0jgJ96yyP2YStwEO-02O7k8Jb9Rf5q7GNNxu3CrS46AZBqaeJCpbtDgETSZ6h_CA2xZxyuGOS-Eo7f0tlu3dzgUOIQKECd0fUHeECQLNxAGd_8cl3bZnb_DJQ0s4EEXd_d81kwyQGChWFmorK8i8h7ZAM5vP3OwbjEungsczoP17nyrCLoczNSLt8HLuJ7AHqXhv9E4fnZYOvgxV80eKYpjhWKknNc4MsVn4Cacthe87hhmwDiYmxTS6w9tMmr6Li-b7RNTODmyi_LKQBFBiWGXz-Pn03nLn1do60LM89ffvodu2jHZnclob0t2ixDYqKixkZpVax79xQ'
-
+USER_ID = 1
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
@@ -30,7 +30,7 @@ mysql = MySQL(app)
 
 #***************************** FUNCIONES ***********************************************
 
-def send_job(user_id,offer_id,area_id,time_start,time_end,surge,price,tips,	service_type):
+def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", 
                 (user_id, offer_id, area_id, time_start, time_end, surge, price, tips))        
@@ -86,8 +86,10 @@ def c():
 def core():    
     contador = 0 
     denied = 0
+    
     while True:
-        print('---------------------------------------------------------------------------------------')            
+        print('---------------------------------------------------------------------------------------')
+        juego = time.time()
         flex_id = '47243550-728c-410f-9a45-739a84b84914'
         print(flex_id)	
         amz_t= token           
@@ -111,7 +113,7 @@ def core():
         start_time = time.time()
         r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
         json_h = r.json()
-        print("--- %s seconds ---" % round(time.time() - start_time,4))
+        print("Tiempo get %s seconds" % round(time.time() - start_time,4))
         print (json_h)
 
         if json_h['offerList'] == [] :
@@ -120,23 +122,31 @@ def core():
             print("--------Bloque Encontrado------------")
             bloque = json_h['offerList']		
             t = literal_eval(str(bloque)[1:-1])	
-
-            #user_id, offer_id, area_id, time_start, time_end, surge, price, tips, service_type
-            #send_job(1,t.get('offerId'),t.get('serviceAreaId'),t.get('startTime'),t.get('endTime'),t.get('surgeMultiplier'),t.get('priceAmount'),t.get('projectedTips'),t.get('serviceTypeId'))
-            print('enviado a sql')
-            break
-		    # rechazar bloques para hoy
-
-		    #time_now = date.today()
-	        #print (time_now.timestamp())
-	        #time_min = time_now.replace(day=time_now.day + 1, hour=0)
-	        #print (time_min.timestamp())
-           
-	    #print(r.headers)
-        #time.sleep(0.1)
-	    #os.system('clear')
+            if t.get('startTime') < t.get('startTime')+120*60:
+                if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
+                    r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
+                    send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t.get('priceAmount'), t.get('projectedTips'))                    
+                    print(r2.text)
+                    print("******Bloque Capturado yenviado a mysql*****")
+                    print (t.get('startTime'))
+                    for key in t:
+                        print (key, ":", t[key])		
+                    print (t.get('offerId'))
+                    localtime = time.asctime( time.localtime(time.time()) )
+                    print ("Local current time :", localtime)
+                    break
+                else:
+                    print('Bloque rechazado: warehouse no deseado')
+                    denied = denied+1
+            else:                
+                 print("Bloque rechazado: Inicia en menos de 2 HORAS")
+                 denied = denied+1
+            
+            
+        
         print ("Paquete #", contador)
-        contador = contador+1 
+        contador = contador+1
+        print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
 
     return 'termino'
 
