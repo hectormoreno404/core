@@ -22,7 +22,7 @@ USER_ID = 1
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
-app.config['MYSQL_USER'] = 'grabber001'
+app.config['MYSQL_USER'] = 'grabber002'
 app.config['MYSQL_PASSWORD'] = '#$H.e5561699'
 app.config['MYSQL_DB'] = 'main'
 
@@ -30,7 +30,7 @@ mysql = MySQL(app)
 
 #***************************** FUNCIONES ***********************************************
 
-def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips):
+def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
                 (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status))        
