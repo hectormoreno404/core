@@ -32,11 +32,16 @@ mysql = MySQL(app)
 
 def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips):
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", 
-                (user_id, offer_id, area_id, time_start, time_end, surge, price, tips))        
+    cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status))        
     mysql.connection.commit()
     cur.close()
 
+def get_token():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM token WHERE user_id = 1 ORDER BY id DESC LIMIT 1' )
+    data = cur.fetchone()
+    return data[2]
    
     
 #***************************** RUTAS/VISTAS ***********************************************
@@ -44,6 +49,11 @@ def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tip
 @app.route('/')
 def index():
      return render_template('index.html')
+
+@app.route('/t')
+def t():
+    get_token()
+    return ('termino')
 
 @app.route('/add_job', methods=['GET', 'POST'])
 def add_job():
@@ -83,7 +93,8 @@ def c():
 
 
 @app.route('/core')
-def core():    
+def core():  
+    captured = 0
     contador = 0 
     denied = 0
     
@@ -92,7 +103,7 @@ def core():
         juego = time.time()
         flex_id = '47243550-728c-410f-9a45-739a84b84914'
         print(flex_id)	
-        amz_t= token           
+        amz_t= get_token()           
         
         # calculando tiempo en ml/s 
         tempo = str(int(round(time.time() * 1000)))
@@ -115,36 +126,43 @@ def core():
         json_h = r.json()
         print("Tiempo get %s seconds" % round(time.time() - start_time,4))
         print (json_h)
-
+        
+        
+        #if 'TokenException' in json_h['Message']:
+        #    print('exeption')
+        #    break
+        
         if json_h['offerList'] == [] :
             print ('naranjas')		
         else:
             print("--------Bloque Encontrado------------")
             bloque = json_h['offerList']		
-            t = literal_eval(str(bloque)[1:-1])	
+            t = literal_eval(str(bloque)[1:-1])            
             if t.get('startTime') < t.get('startTime')+120*60:
                 if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
                     r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
-                    send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t.get('priceAmount'), t.get('projectedTips'))                    
                     print(r2.text)
                     print("******Bloque Capturado yenviado a mysql*****")
+                    captured = captured+1
                     print (t.get('startTime'))
                     for key in t:
                         print (key, ":", t[key])		
                     print (t.get('offerId'))
                     localtime = time.asctime( time.localtime(time.time()) )
                     print ("Local current time :", localtime)
-                    break
+                    status = 1
                 else:
                     print('Bloque rechazado: warehouse no deseado')
                     denied = denied+1
+                    status = 2
             else:                
                  print("Bloque rechazado: Inicia en menos de 2 HORAS")
                  denied = denied+1
-            
-            
-        
+            send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t.get('priceAmount'), t.get('projectedTips'), status)
+            status = 0
         print ("Paquete #", contador)
+        print ("Bloques rechazados ", denied)
+        print ("Bloques captudados ", captured)
         contador = contador+1
         print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
 
