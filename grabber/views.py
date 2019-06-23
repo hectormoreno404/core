@@ -83,70 +83,61 @@ def c():
 
 
 @app.route('/core')
-def core():
-    def contar():
-        contador = 0 
-        denied = 0
-        while True:
-            print('---------------------------------------------------------------------------------------')            
-            flex_id = '47243550-728c-410f-9a45-739a84b84914'
-            print(flex_id)	
-            amz_t= token           
+def core():    
+    contador = 0 
+    denied = 0
+    while True:
+        print('---------------------------------------------------------------------------------------')            
+        flex_id = '47243550-728c-410f-9a45-739a84b84914'
+        print(flex_id)	
+        amz_t= token           
         
-            # calculando tiempo en ml/s 
-            tempo = str(int(round(time.time() * 1000)))
-            #print (tempo)
+        # calculando tiempo en ml/s 
+        tempo = str(int(round(time.time() * 1000)))
+        #print (tempo)
 
-            headers = {
-		        'x-amz-access-token': amz_t,
-		        #'X-Amzn-RequestId': flex_id,
-		        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.16.34.0',
-		        'X-Flex-Client-Time': tempo,
-		        'x-flex-instance-id': flex_id,
-		        'Content-Type': 'application/json',
-		        'host': 'flex-capacity-na.amazon.com',
-		        'Connection': 'Keep-Alive',
-		        'Accept-Encoding': 'gzip',
-	        }
-	        #ENVIO REQUEST
-            start_time = time.time()
-            r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
-            json_h = r.json()
-            print("--- %s seconds ---" % (time.time() - start_time))
-            print (json_h)
+        headers = {
+		    'x-amz-access-token': amz_t,
+		    #'X-Amzn-RequestId': flex_id,
+		    'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.16.34.0',
+		    'X-Flex-Client-Time': tempo,
+		    'x-flex-instance-id': flex_id,
+		    'Content-Type': 'application/json',
+		    'host': 'flex-capacity-na.amazon.com',
+		    'Connection': 'Keep-Alive',
+		    'Accept-Encoding': 'gzip',
+	    }
+	    #ENVIO REQUEST
+        start_time = time.time()
+        r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
+        json_h = r.json()
+        print("--- %s seconds ---" % round(time.time() - start_time,4))
+        print (json_h)
 
-            if json_h['offerList'] == [] :
-                print ('naranjas')		
-            else:
-                print("--------Bloque Encontrado------------")
-                bloque = json_h['offerList']		
-                t = literal_eval(str(bloque)[1:-1])	
+        if json_h['offerList'] == [] :
+            print ('naranjas')		
+        else:
+            print("--------Bloque Encontrado------------")
+            bloque = json_h['offerList']		
+            t = literal_eval(str(bloque)[1:-1])	
 
-                #user_id, offer_id, area_id, time_start, time_end, surge, price, tips, service_type
-                #send_job(1,t.get('offerId'),t.get('serviceAreaId'),t.get('startTime'),t.get('endTime'),t.get('surgeMultiplier'),t.get('priceAmount'),t.get('projectedTips'),t.get('serviceTypeId'))
-                print('enviado a sql')
-                break
-		        # rechazar bloques para hoy
+            #user_id, offer_id, area_id, time_start, time_end, surge, price, tips, service_type
+            #send_job(1,t.get('offerId'),t.get('serviceAreaId'),t.get('startTime'),t.get('endTime'),t.get('surgeMultiplier'),t.get('priceAmount'),t.get('projectedTips'),t.get('serviceTypeId'))
+            print('enviado a sql')
+            break
+		    # rechazar bloques para hoy
 
-		        #time_now = date.today()
-	            #print (time_now.timestamp())
-	            #time_min = time_now.replace(day=time_now.day + 1, hour=0)
-	            #print (time_min.timestamp())
+		    #time_now = date.today()
+	        #print (time_now.timestamp())
+	        #time_min = time_now.replace(day=time_now.day + 1, hour=0)
+	        #print (time_min.timestamp())
            
-	        #print(r.headers)
-            #time.sleep(0.1)
-	        #os.system('clear')
-            print ("Paquete #", contador)
-            contador = contador+1            
-            print('Hilo:', 
-                    threading.current_thread().getName(), 
-                    'con identificador:', 
-                    threading.current_thread().ident,
-                    'Contador:', contador)
-            
+	    #print(r.headers)
+        #time.sleep(0.1)
+	    #os.system('clear')
+        print ("Paquete #", contador)
+        contador = contador+1 
 
-    hilo1 = threading.Thread(target=contar)   
-    hilo1.start()
     return 'termino'
 
 
