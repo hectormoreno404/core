@@ -17,12 +17,12 @@ import threading
 from ast import literal_eval
 #****************************GLOBALES****************************************************
 
-token = 'Atna|EwICIMiAP94Qse2fDllqYHpzcnMzLPxfMlIIe0jgJ96yyP2YStwEO-02O7k8Jb9Rf5q7GNNxu3CrS46AZBqaeJCpbtDgETSZ6h_CA2xZxyuGOS-Eo7f0tlu3dzgUOIQKECd0fUHeECQLNxAGd_8cl3bZnb_DJQ0s4EEXd_d81kwyQGChWFmorK8i8h7ZAM5vP3OwbjEungsczoP17nyrCLoczNSLt8HLuJ7AHqXhv9E4fnZYOvgxV80eKYpjhWKknNc4MsVn4Cacthe87hhmwDiYmxTS6w9tMmr6Li-b7RNTODmyi_LKQBFBiWGXz-Pn03nLn1do60LM89ffvodu2jHZnclob0t2ixDYqKixkZpVax79xQ'
+token = 'Atna|EwICIP7jmXj9d03Nmmt7LtX7C3clcoyIcNRFHNqI-XIGDPnXt9_O-OUwihy_tmSTS_ApbApQhJFY-a86Yt1dSUtk6Wl9vZFPvHMgR0uGe_-c3XDI_cO_iAn2eXWhrP4qFKft1AoGb1a7dM8PyTCCUe65ZhMsrPR_XoWsnUV2YgFrTJQN4SyVckNq_yE9SXZQwovHo6EO08ApTG1SReVxBeoVDbnFdJHY4GeSCHM4QKucvVnexlzrDudVdr7q-2pbXfCiTE6NCBjXgdVXwjWWV1S7mpCE_ulYePnOTSoiNw5tIAnNFsnWsiohvtImbwWV3-lspNkkigGEWvS0isfsoDHCVKXy3Rinrc_CCwyGhotksMEIzg'
 USER_ID = 1
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
-app.config['MYSQL_USER'] = 'grabber002'
+app.config['MYSQL_USER'] = 'grabber001'
 app.config['MYSQL_PASSWORD'] = '#$H.e5561699'
 app.config['MYSQL_DB'] = 'main'
 
@@ -30,16 +30,28 @@ mysql = MySQL(app)
 
 #***************************** FUNCIONES ***********************************************
 
-def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status):
+def send_job(user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status, times):
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", 
-                (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status))        
+    cur.execute("INSERT INTO job (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status , times) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                (user_id, offer_id, area_id, time_start, time_end, surge, price, tips, status, times))        
     mysql.connection.commit()
     cur.close()
 
+def add_times_last_job():
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE job SET times = times +1 WHERE user_id = %s ORDER BY id DESC LIMIT 1", (USER_ID,))        
+    mysql.connection.commit()
+    cur.close()
+
+def get_last_job():
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM job WHERE user_id = %s ORDER BY id DESC LIMIT 1' , (USER_ID,) )
+    data = cur.fetchone()
+    return data[2]
+
 def get_token():
     cur = mysql.connection.cursor()
-    cur.execute('SELECT * FROM token WHERE user_id = 1 ORDER BY id DESC LIMIT 1' )
+    cur.execute("SELECT * FROM token WHERE user_id = %s ORDER BY id DESC LIMIT 1", (USER_ID,))
     data = cur.fetchone()
     return data[2]
    
@@ -123,49 +135,60 @@ def core():
 	    #ENVIO REQUEST
         start_time = time.time()
         r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
-        json_h = r.json()
-        print("Tiempo get %s seconds" % round(time.time() - start_time,4))
-        print (json_h)
+        response = r.json()
         
+        print("Tiempo get %s seconds" % round(time.time() - start_time,4))
+        if('Message' in response):
+            message = response['Message']
+            if ('TokenException' in message):
+                print ('Token exception')
+                break
+            else:
+                print(message)
+                break
         
         #if 'TokenException' in json_h['Message']:
         #    print('exeption')
         #    break
         
-        if json_h['offerList'] == [] :
-            print ('naranjas')		
-        else:
-            print("--------Bloque Encontrado------------")
-            bloque = json_h['offerList']		
-            t = literal_eval(str(bloque)[1:-1])            
-            if t.get('startTime') < t.get('startTime')+120*60:
-                if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
-                    r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
-                    print(r2.text)
-                    print("******Bloque Capturado yenviado a mysql*****")
-                    captured = captured+1
-                    print (t.get('startTime'))
-                    for key in t:
-                        print (key, ":", t[key])		
-                    print (t.get('offerId'))
-                    localtime = time.asctime( time.localtime(time.time()) )
-                    print ("Local current time :", localtime)
-                    status = 1
+        if('offerList' in response):
+            if response['offerList'] == [] :
+                print ('naranjas')		
+            else:
+                print("--------Bloque Encontrado------------")
+                bloque = response['offerList']		
+                t = literal_eval(str(bloque)[1:-1])            
+                if t.get('startTime') < t.get('startTime')+420*60:
+                    if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
+                        r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
+                        print(r2.text)
+                        print("******Bloque Capturado yenviado a mysql*****")
+                        captured = captured+1
+                        print (t.get('startTime'))
+                        for key in t:
+                            print (key, ":", t[key])		
+                        print (t.get('offerId'))
+                        localtime = time.asctime( time.localtime(time.time()) )
+                        print ("Local current time :", localtime)
+                        status = 1
+                    else:
+                        print('Bloque rechazado: warehouse no deseado')
+                        denied = denied+1
+                        status = 2
+                else:                
+                     print("Bloque rechazado: Inicia en menos de 2 HORAS")
+                     denied = denied+1
+                if (get_last_job() != t.get('offerId')):
+                    send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t['rateInfo']['priceAmount'], t['rateInfo']['projectedTips'], status, 1)
                 else:
-                    print('Bloque rechazado: warehouse no deseado')
-                    denied = denied+1
-                    status = 2
-            else:                
-                 print("Bloque rechazado: Inicia en menos de 2 HORAS")
-                 denied = denied+1
-            send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t.get('priceAmount'), t.get('projectedTips'), status)
-            status = 0
-        print ("Paquete #", contador)
-        print ("Bloques rechazados ", denied)
-        print ("Bloques captudados ", captured)
-        contador = contador+1
-        time.sleep(0.25)
-        print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
+                    add_times_last_job()
+                status = 0
+            print ("Paquete #", contador)
+            print ("Bloques rechazados ", denied)
+            print ("Bloques captudados ", captured)
+            contador = contador+1        
+            print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
+            time.sleep(0.2)
 
     return 'termino'
 
@@ -198,3 +221,4 @@ def about():
         year=datetime.now().year,
         message='Your application description page.'
     )
+
