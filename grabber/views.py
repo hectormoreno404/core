@@ -22,7 +22,7 @@ USER_ID = 1
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
-app.config['MYSQL_USER'] = 'grabber001'
+app.config['MYSQL_USER'] = 'grabber002'
 app.config['MYSQL_PASSWORD'] = '#$H.e5561699'
 app.config['MYSQL_DB'] = 'main'
 
@@ -110,11 +110,11 @@ def core():
     contador = 0 
     denied = 0
     
-    while True:
-        print('---------------------------------------------------------------------------------------')
+    t_ciclo = time.time()
+    while True:        
         juego = time.time()
         flex_id = '47243550-728c-410f-9a45-739a84b84914'
-        print(flex_id)	
+        #print(flex_id)	
         amz_t= get_token()           
         
         # calculando tiempo en ml/s 
@@ -133,11 +133,10 @@ def core():
 		    'Accept-Encoding': 'gzip',
 	    }
 	    #ENVIO REQUEST
-        start_time = time.time()
+        get_time = time.time()
         r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
-        response = r.json()
-        
-        print("Tiempo get %s seconds" % round(time.time() - start_time,4))
+        response = r.json()        
+        print("Tiempo GET %s seconds" % round(time.time() - get_time,4))
         if('Message' in response):
             message = response['Message']
             if ('TokenException' in message):
@@ -151,7 +150,7 @@ def core():
         #    print('exeption')
         #    break
         
-        if('offerList' in response):
+        elif('offerList' in response):
             if response['offerList'] == [] :
                 print ('naranjas')		
             else:
@@ -160,9 +159,11 @@ def core():
                 t = literal_eval(str(bloque)[1:-1])            
                 if t.get('startTime') < t.get('startTime')+420*60:
                     if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
+                        post_time = time.time()
                         r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
+                        print("Tiempo POST %s seconds" % round(time.time() - post_time,4))
                         print(r2.text)
-                        print("******Bloque Capturado yenviado a mysql*****")
+                        print("******Bloque Capturado y enviado a mysql*****")
                         captured = captured+1
                         print (t.get('startTime'))
                         for key in t:
@@ -172,7 +173,7 @@ def core():
                         print ("Local current time :", localtime)
                         status = 1
                     else:
-                        print('Bloque rechazado: warehouse no deseado')
+                        print('Bloque rechazado: warehouse no deseado o comienza en menos de 2 horas')
                         denied = denied+1
                         status = 2
                 else:                
@@ -186,9 +187,14 @@ def core():
             print ("Paquete #", contador)
             print ("Bloques rechazados ", denied)
             print ("Bloques captudados ", captured)
-            contador = contador+1        
-            print("Tiempo juego %s seconds" % round(time.time() - start_time,4))
+            contador = contador+1 
+            print("Tiempo Ciclo %s seconds" % round(time.time() - t_ciclo,4))
+            t_ciclo = time.time()
+            print('------------------------------------')
             time.sleep(0.2)
+        else: 
+            print(response.text)
+            break
 
     return 'termino'
 
