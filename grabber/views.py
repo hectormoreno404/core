@@ -22,7 +22,7 @@ USER_ID = 1
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
-app.config['MYSQL_USER'] = 'grabber002'
+app.config['MYSQL_USER'] = 'grabber001'
 app.config['MYSQL_PASSWORD'] = '#$H.e5561699'
 app.config['MYSQL_DB'] = 'main'
 
