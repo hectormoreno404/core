@@ -12,6 +12,7 @@ import json
 import os
 import datetime
 import threading
+import faster_than_requests as requests
 
 
 from ast import literal_eval
@@ -121,22 +122,27 @@ def core():
         tempo = str(int(round(time.time() * 1000)))
         #print (tempo)
 
-        headers = {
-		    'x-amz-access-token': amz_t,
-		    #'X-Amzn-RequestId': flex_id,
-		    'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.16.34.0',
-		    'X-Flex-Client-Time': tempo,
-		    'x-flex-instance-id': flex_id,
-		    'Content-Type': 'application/json',
-		    'host': 'flex-capacity-na.amazon.com',
-		    'Connection': 'Keep-Alive',
-		    'Accept-Encoding': 'gzip',
-	    }
-	    #ENVIO REQUEST
+       
+        
+        headers = [
+			("x-amz-access-token", amz_t),
+		    #"X-Amzn-RequestId": flex_id,
+		    ("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.16.34.0"),
+		    ("X-Flex-Client-Time", tempo),
+		    ("x-flex-instance-id", flex_id),
+		    ("Content-Type", "application/json"),
+		    #("host", "flex-capacity-na.amazon.com"),
+		    ("Connection", "Keep-Alive"),
+		    ("Accept-Encoding", "gzip")
+		    ]
+        
+        requests.setHeaders( headers)
         get_time = time.time()
-        r = requests.get('https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2' , headers=headers)
-        response = r.json()        
+        r = requests.gets("https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2")
         print("Tiempo GET %s seconds" % round(time.time() - get_time,4))
+        response = json.loads(r.get('body'))
+        	
+
         if('Message' in response):
             message = response['Message']
             if ('TokenException' in message):
@@ -151,6 +157,7 @@ def core():
         #    break
         
         elif('offerList' in response):
+            response = json.loads(response)
             if response['offerList'] == [] :
                 print ('naranjas')		
             else:
