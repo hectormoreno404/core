@@ -130,7 +130,7 @@ def core():
 		    ("X-Flex-Client-Time", tempo),
 		    ("x-flex-instance-id", flex_id),
 		    ("Content-Type", "application/json"),
-		    #("host", "flex-capacity-na.amazon.com"),
+		    ("host", "flex-capacity-na.amazon.com"),
 		    ("Connection", "Keep-Alive"),
 		    ("Accept-Encoding", "gzip")
 		    ]
