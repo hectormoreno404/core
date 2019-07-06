@@ -13,6 +13,8 @@ import os
 import datetime
 import threading
 import faster_than_requests as requests
+import gzip
+
 
 
 from ast import literal_eval
@@ -20,6 +22,7 @@ from ast import literal_eval
 
 token = 'Atna|EwICIP7jmXj9d03Nmmt7LtX7C3clcoyIcNRFHNqI-XIGDPnXt9_O-OUwihy_tmSTS_ApbApQhJFY-a86Yt1dSUtk6Wl9vZFPvHMgR0uGe_-c3XDI_cO_iAn2eXWhrP4qFKft1AoGb1a7dM8PyTCCUe65ZhMsrPR_XoWsnUV2YgFrTJQN4SyVckNq_yE9SXZQwovHo6EO08ApTG1SReVxBeoVDbnFdJHY4GeSCHM4QKucvVnexlzrDudVdr7q-2pbXfCiTE6NCBjXgdVXwjWWV1S7mpCE_ulYePnOTSoiNw5tIAnNFsnWsiohvtImbwWV3-lspNkkigGEWvS0isfsoDHCVKXy3Rinrc_CCwyGhotksMEIzg'
 USER_ID = 1
+JOBS = []
 
 #***************************** CONEXION ***********************************************
 app.config['MYSQL_HOST'] = '13.77.127.110'
@@ -138,70 +141,51 @@ def core():
         requests.setHeaders( headers)
         get_time = time.time()
         r = requests.gets("https://flex-capacity-na.amazon.com/GetOffersForProvider?1496f58f-ca2d-43c7-817b-ec2c3613390d&serviceAreaIds=1496f58f-ca2d-43c7-817b-ec2c3613390d&apiVersion=V2")
-        print("Tiempo GET %s seconds" % round(time.time() - get_time,4))
-        response = json.loads(r.get('body'))
-        	
+        #r = requests.gets("https://hookb.in/jeaDbkY3XXu1012zmKE1")
+        print("Tiempo GET %s seconds" % round(time.time() - get_time,4))        
+        try:
+            response = json.loads(r.get('body'))
+        except:
+            r2 = gzip.decompress(r.get('body'))
+            response = json.loads(r2)
 
+        v = response.get('offerList')
+        
         if('Message' in response):
             message = response['Message']
             if ('TokenException' in message):
                 print ('Token exception')
-                break
+                break                
             else:
                 print(message)
                 break
-        
-        #if 'TokenException' in json_h['Message']:
-        #    print('exeption')
-        #    break
-        
-        elif('offerList' in response):           
-            if response['offerList'] == [] :
-                print ('naranjas')		
-            else:
-                print("--------Bloque Encontrado------------")
-                bloque = response['offerList']		
-                t = literal_eval(str(bloque)[1:-1])            
-                if t.get('startTime') < t.get('startTime')+420*60:
+
+
+        if len(v)> 1 :            
+            for i in range(len(v)):
+                print("* CAPTURANDO BLOQUE *")
+                if v[i]('startTime') < v[i]('startTime')+420*60:
                     if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
                         post_time = time.time()
-                        r2 = requests.posts("https://flex-capacity-na.amazon.com/AcceptOffer", """{"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/", t.get('offerId')}""")
-                        #r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
+                        r2 = requests.posts("https://flex-capacity-na.amazon.com/AcceptOffer", """{"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/", t.get('offerId')}""")                    
                         print("Tiempo POST %s seconds" % round(time.time() - post_time,4))
-                        print(r2.text)
-                        print("******Bloque Capturado y enviado a mysql*****")
-                        captured = captured+1
-                        print (t.get('startTime'))
-                        for key in t:
-                            print (key, ":", t[key])		
-                        print (t.get('offerId'))
-                        localtime = time.asctime( time.localtime(time.time()) )
-                        print ("Local current time :", localtime)
-                        status = 1
+                        print(r2)
+                        break
                     else:
-                        print('Bloque rechazado: warehouse no deseado o comienza en menos de 2 horas')
-                        denied = denied+1
-                        status = 2
-                else:                
-                     print("Bloque rechazado: Inicia en menos de 2 HORAS")
-                     denied = denied+1
-                if (get_last_job() != t.get('offerId')):
-                    send_job(USER_ID, t.get('offerId'), t.get('serviceAreaId'), t.get('startTime'), t.get('endTime'), t.get('surgeMultiplier'), t['rateInfo']['priceAmount'], t['rateInfo']['projectedTips'], status, 1)
+                        print('Trabajo rechazado: Warehouse')
+                        break
                 else:
-                    add_times_last_job()
-                status = 0
-            print ("Paquete #", contador)
-            print ("Bloques rechazados ", denied)
-            print ("Bloques captudados ", captured)
+                    print('Trabajo rechazado: Comienza pronto')
+                    break
+        else:
+            print('naranjas')            
             contador = contador+1 
+            print("Intento # %s " %contador)
             print("Tiempo Ciclo %s seconds" % round(time.time() - t_ciclo,4))
             t_ciclo = time.time()
             print('------------------------------------')
             time.sleep(0.2)
-        else: 
-            print(response.text)
-            break
-
+        
     return 'termino'
 
 
