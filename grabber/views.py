@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import render_template, request
 from flask_mysqldb import MySQL
 from grabber import app
-import requests
+#import requests
 import time
 import json
 import os
@@ -117,17 +117,16 @@ def core():
         flex_id = '47243550-728c-410f-9a45-739a84b84914'
         #print(flex_id)	
         amz_t= get_token()           
-        
         # calculando tiempo en ml/s 
         tempo = str(int(round(time.time() * 1000)))
         #print (tempo)
 
        
-        
+        #print (amz_t)
         headers = [
 			("x-amz-access-token", amz_t),
 		    #"X-Amzn-RequestId": flex_id,
-		    ("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.16.34.0"),
+		    ("User-Agent", "Dalvik/2.1.0 (Linux; U; Android 9; SM-G965U Build/PPR1.180610.011) RabbitAndroid/3.19.38.0"),
 		    ("X-Flex-Client-Time", tempo),
 		    ("x-flex-instance-id", flex_id),
 		    ("Content-Type", "application/json"),
@@ -156,8 +155,7 @@ def core():
         #    print('exeption')
         #    break
         
-        elif('offerList' in response):
-            response = json.loads(response)
+        elif('offerList' in response):           
             if response['offerList'] == [] :
                 print ('naranjas')		
             else:
