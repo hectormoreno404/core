@@ -165,7 +165,8 @@ def core():
                 if t.get('startTime') < t.get('startTime')+420*60:
                     if t.get('serviceAreaId') == '1496f58f-ca2d-43c7-817b-ec2c3613390d':
                         post_time = time.time()
-                        r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
+                        r2 = requests.posts("https://flex-capacity-na.amazon.com/AcceptOffer", """{"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/", t.get('offerId')}""")
+                        #r2 = requests.post('https://flex-capacity-na.amazon.com/AcceptOffer', headers=headers , json={"__type": "AcceptOfferInput:http://internal.amazon.com/coral/com.amazon.omwbuseyservice.offers/","offerId": t.get('offerId')})
                         print("Tiempo POST %s seconds" % round(time.time() - post_time,4))
                         print(r2.text)
                         print("******Bloque Capturado y enviado a mysql*****")
